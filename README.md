@@ -1,5 +1,5 @@
-# MindMace
-![MindMace Logo](MindMace-Logo.png)
+# MindMaze
+![MindMaze Logo](MindMaze-Logo.png)
 ## Beschreibung
 Schulprojekt spiel mit der 3D Map der Schule als Spielwelt.
 
