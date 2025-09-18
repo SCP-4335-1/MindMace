@@ -1,6 +1,8 @@
 # MindMaze
 
-![MindMaze Logo](MindMaze-Logo.png)
+<p align="center">
+  <img src="MindMaze-Logo.png" alt="MindMaze Logo" width="300"/>
+</p>
 
 ---
 
