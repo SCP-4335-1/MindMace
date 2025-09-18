@@ -33,11 +33,7 @@ SCP-4335-1 und Andere
 Um Änderungen am Projekt zu speichern und auf GitHub hochzuladen, folge diesen Schritten:
 
 ```bash
-# Datei(en) zum Commit vorbereiten
-git add <filename>
-
-# Änderungen committen
+# Datei(en) mit GitHub Sync
+git add .
 git commit -m "Beschreibe deine Änderung"
-
-# Änderungen zum GitHub-Repository hochladen
 git push origin main
