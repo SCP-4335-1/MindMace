@@ -11,3 +11,12 @@ Keine Lizenz
 
 ## Autor
 SCP-4335-1 und Andere
+
+## Github sync
+```bash
+git add filename.type
+
+git commit -m "commit message"
+
+git push origin main
+```
