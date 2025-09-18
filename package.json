@@ -19,7 +19,7 @@
   "bugs": {
     "url": "https://github.com/SCP-4335-1/MindMaze/issues"
   },
-  "homepage": "https://github.com/SCP-4335-1/MindMaze#readme",
+  "homepage": "https://github.com/SCP-4335-1/MindMaze#index.html",
   "dependencies": {
     "express": "^5.1.0"
   },
