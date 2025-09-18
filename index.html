@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Game UI</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="light-theme">
+    <!-- Top Bar (Fixed Position) -->
+    <div class="top-bar">
+        <!-- Pause Menu Button -->
+        <div class="menu-btn" id="menuBtn">
+            <div class="menu-bar"></div>
+            <div class="menu-bar"></div>
+            <div class="menu-bar"></div>
+        </div>
+
+        <!-- Timer -->
+        <div class="timer" id="timer">00:00:00</div>
+
+        <!-- Score Display -->
+        <div class="score" id="score">
+            <div class="quiz-score">Quizzes: <span id="currentScore">0</span>/<span id="maxQuizzes">10</span></div>
+            <div class="secrets-score">Secrets: <span id="secretsFound">0</span><span id="maxSecrets" class="hidden">/5</span></div>
+        </div>
+    </div>
+
+    <!-- Scale Container (for game elements) -->
+    <div class="scale-container">
+        <!-- Plus Sign -->
+        <div class="plus-container">
+            <div class="plus">+</div>
+        </div>
+
+        <!-- Hotbar -->
+        <div class="hotbar">
+            <!-- Hotbar slots will be added by JavaScript -->
+        </div>
+
+        <!-- Stamina Bar -->
+        <div class="stamina-container">
+            <div class="stamina-bar">
+                <div class="stamina-fill" id="staminaFill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pause Menu Dropdown -->
+    <div class="menu-dropdown" id="menuDropdown">
+        <h3 class="settings-title">Settings</h3>
+        
+        <div class="settings-section">
+            <h4>Display</h4>
+            <div class="setting-option">
+                <label>Theme</label>
+                <div class="theme-toggle">
+                    <span>Dark Mode</span>
+                    <label class="switch">
+                        <input type="checkbox" id="themeToggle">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="setting-option">
+                <label for="qualitySelect">Quality</label>
+                <select id="qualitySelect" class="settings-select">
+                    <option value="low">Low</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high">High</option>
+                    <option value="ultra">Ultra</option>
+                </select>
+            </div>
+            
+            <div class="setting-option">
+                <label for="fpsSlider">Max FPS: <span id="fpsValue">60</span></label>
+                <input type="range" id="fpsSlider" class="settings-slider" min="30" max="144" value="60" step="1">
+            </div>
+            
+            <div class="setting-option">
+                <label for="guiScale">GUI Scale: <span id="guiScaleValue">100</span>%</label>
+                <input type="range" id="guiScale" class="settings-slider" min="50" max="200" value="100" step="5">
+            </div>
+        </div>
+        
+        <div class="settings-section">
+            <h4>Controls</h4>
+            <div class="setting-option">
+                <label>Control Scheme</label>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="controlScheme" value="wasd" checked>
+                        <span>WASD</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="controlScheme" value="arrows">
+                        <span>Arrow Keys</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="controlScheme" value="touch">
+                        <span>Touch Controls</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="setting-option">
+                <label for="mouseSensitivity">Mouse Sensitivity: <span id="sensitivityValue">50</span>%</label>
+                <input type="range" id="mouseSensitivity" class="settings-slider" min="10" max="200" value="50" step="5">
+            </div>
+            
+            <div class="setting-option">
+                <label for="invertYAxis">Invert Y-Axis</label>
+                <label class="switch">
+                    <input type="checkbox" id="invertYAxis">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="settings-buttons">
+            <button id="applySettings" class="settings-button">Apply</button>
+            <button id="resetSettings" class="settings-button">Reset to Default</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
