@@ -1,23 +1,41 @@
 # MindMaze
+
 ![MindMaze Logo](MindMaze-Logo.png)
 
-## Beschreibung
-Schulprojekt spiel mit der 3D Map der Schule als Spielwelt.
+---
 
-## Technologien
-HTML, CSS, JavaScript
+## 📖 Beschreibung
+MindMaze ist ein Schulprojekt-Spiel, das die 3D-Map der Schule als Spielwelt nutzt.  
+Spieler können die Schule erkunden und verschiedene Aufgaben und Herausforderungen meistern.
 
-## Lizenz
-Keine Lizenz
+---
 
-## Autor
+## ⚙️ Technologien
+- HTML  
+- CSS  
+- JavaScript  
+
+---
+
+## 📝 Lizenz
+Keine Lizenz – alle Rechte vorbehalten.
+
+---
+
+## 👥 Autor
 SCP-4335-1 und Andere
 
-## Github sync
+---
+
+## 💻 GitHub Sync
+Um Änderungen am Projekt zu speichern und auf GitHub hochzuladen, folge diesen Schritten:
+
 ```bash
-git add filename.type
+# Datei(en) zum Commit vorbereiten
+git add <filename>
 
-git commit -m "commit message"
+# Änderungen committen
+git commit -m "Beschreibe deine Änderung"
 
+# Änderungen zum GitHub-Repository hochladen
 git push origin main
-```
