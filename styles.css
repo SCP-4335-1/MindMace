@@ -19,10 +19,27 @@ html {
     transform-origin: top center;
     width: 100%;
     max-width: 1920px; /* Maximum width for the UI */
-    height: calc(100vh - 80px); /* Account for top bar */
+    height: calc(100vh - 60px); /* Full height minus top bar */
     will-change: transform;
     transition: transform 0.2s ease;
     pointer-events: none; /* Allows clicks to pass through when not scaled */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    padding-bottom: 20px;
+    box-sizing: border-box;
+}
+
+/* Make sure all UI elements in scale container are positioned absolutely */
+.scale-container > * {
+    position: absolute;
+    pointer-events: auto; /* Re-enable pointer events for interactive elements */
+}
+
+/* Ensure hotbar is always interactive */
+.hotbar, .hotbar * {
+    pointer-events: auto !important;
 }
 
 /* Top bar container */
@@ -36,10 +53,9 @@ html {
     pointer-events: none; /* Allows clicks to pass through to elements below */
 }
 
-/* Make sure all UI elements in scale container are positioned absolutely */
-.scale-container > * {
-    position: absolute;
-    pointer-events: auto; /* Re-enable pointer events for interactive elements */
+/* Re-enable pointer events for interactive elements in top bar */
+.top-bar > * {
+    pointer-events: auto;
 }
 
 /* Quality-based effects */
@@ -675,15 +691,18 @@ button {
 
 /* Plus Sign */
 .plus-container {
+    position: fixed;  /* Changed from absolute to fixed */
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) scale(var(--gui-scale-factor, 1));
     width: 100px;
     height: 100px;
     display: flex;
     justify-content: center;
     align-items: center;
     transform-origin: center center;
+    z-index: 1;
+    pointer-events: auto; /* Ensure it's clickable */
 }
 
 .plus {
@@ -696,10 +715,11 @@ button {
 
 /* Stamina Bar - Minecraft Boss Bar Style */
 .stamina-container {
-    position: absolute;
+    position: fixed;  /* Changed from absolute to fixed */
     bottom: 120px;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(-50%) scale(var(--gui-scale-factor, 1));
+    transform-origin: bottom center;
     width: 400px;
     height: 20px;
     background-color: rgba(0, 0, 0, 0.7);
@@ -708,6 +728,7 @@ button {
     overflow: hidden;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     padding: 2px;
+    z-index: 99;  /* Ensure it's above other elements but below the hotbar */
 }
 
 .stamina-fill {
@@ -771,13 +792,81 @@ button {
     position: fixed;
     bottom: 20px;
     left: 50%;
-    transform: translateX(-50%);
-    background-color: var(--hotbar-bg);
-    padding: 15px;
-    border-radius: 10px;
+    transform: translateX(-50%) scale(var(--gui-scale-factor, 1));
+    transform-origin: bottom center;
     display: flex;
+    gap: 8px;
+    padding: 8px;
+    background: var(--hotbar-bg);
+    border: 2px solid var(--hotbar-border);
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    pointer-events: auto;
+    margin: 0 auto;
+    width: auto;
+    white-space: nowrap;
+    /* Ensure smooth scaling */
+    will-change: transform;
+    transition: transform 0.2s ease;
+}
+
+.hotbar-slot {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
     justify-content: center;
-    box-shadow: 0 0 15px var(--accent-color), 0 0 30px var(--accent-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.hotbar-slot:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.hotbar-slot.active {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 15px var(--accent-glow);
+    transform: translateY(-4px);
+}
+
+.hotbar-item {
+    width: 48px;
+    height: 48px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.slot-number {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    pointer-events: none;
+}
+
+.selection-indicator {
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    border: 2px solid transparent;
+    border-radius: 10px;
     border: 2px solid var(--hotbar-border);
     transition: box-shadow 0.3s ease;
 }

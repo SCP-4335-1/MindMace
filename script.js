@@ -67,17 +67,6 @@ function init() {
     startGameLoop();
 }
 
-// hotbar
-function initHotbar() {
-    const hotbar = document.querySelector('.hotbar');
-    for (let i = 0; i < 9; i++) {
-        const slot = document.createElement('div');
-        slot.classList.add('hotbar-slot');
-        slot.setAttribute('data-slot', i);
-        hotbar.appendChild(slot);
-    }
-}
-
 // Game loop
 function startGameLoop() {
     // Clear any existing game loop
@@ -779,6 +768,79 @@ function updateStamina() {
         document.documentElement.style.setProperty('--stamina-color', '#55ff55');
         staminaFill.style.animation = 'none';
     }
+}
+
+// Initialize hotbar with 9 slots
+function initHotbar() {
+    const hotbar = document.querySelector('.hotbar');
+    hotbar.innerHTML = ''; // Clear any existing slots
+    
+    // Create 9 slots
+    for (let i = 0; i < 9; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'hotbar-slot';
+        slot.setAttribute('data-slot', i + 1);
+        
+        // Add the slot number indicator (1-9)
+        const slotNumber = document.createElement('div');
+        slotNumber.className = 'slot-number';
+        slotNumber.textContent = i + 1 === 10 ? '0' : (i + 1).toString();
+        
+        // Add the item container (initially empty)
+        const item = document.createElement('div');
+        item.className = 'hotbar-item';
+        
+        // Add the selection indicator (initially hidden)
+        const selection = document.createElement('div');
+        selection.className = 'selection-indicator';
+        
+        // Add elements to the slot
+        slot.appendChild(selection);
+        slot.appendChild(item);
+        slot.appendChild(slotNumber);
+        
+        // Add click event for selection
+        slot.addEventListener('click', () => selectHotbarSlot(i + 1));
+        
+        // Add keyboard shortcuts (1-9)
+        if (i < 9) { // Only for slots 1-9 (0 will be handled separately)
+            const key = (i + 1).toString();
+            window.addEventListener('keydown', (e) => {
+                if (e.key === key) {
+                    selectHotbarSlot(i + 1);
+                }
+            });
+        }
+        
+        hotbar.appendChild(slot);
+    }
+    
+    // Add key listener for 0 (10th slot)
+    window.addEventListener('keydown', (e) => {
+        if (e.key === '0') {
+            selectHotbarSlot(10);
+        }
+    });
+    
+    // Select first slot by default
+    selectHotbarSlot(1);
+}
+
+// Select a hotbar slot
+function selectHotbarSlot(slotNumber) {
+    // Remove active class from all slots
+    document.querySelectorAll('.hotbar-slot').forEach(slot => {
+        slot.classList.remove('active');
+    });
+    
+    // Add active class to selected slot
+    const selectedSlot = document.querySelector(`.hotbar-slot[data-slot="${slotNumber}"]`);
+    if (selectedSlot) {
+        selectedSlot.classList.add('active');
+    }
+    
+    // Update any game state if needed
+    // currentHotbarSlot = slotNumber;
 }
 
 // Initialize the game when the DOM is fully loaded
