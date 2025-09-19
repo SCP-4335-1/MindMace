@@ -42,7 +42,7 @@ html {
     pointer-events: auto !important;
 }
 
-/* Top bar container */
+/* Top bar container - Fixed size */
 .top-bar {
     position: fixed;
     top: 0;
@@ -51,11 +51,65 @@ html {
     height: 60px;
     z-index: 1000;
     pointer-events: none; /* Allows clicks to pass through to elements below */
+    padding: 10px;
+    box-sizing: border-box;
 }
 
 /* Re-enable pointer events for interactive elements in top bar */
 .top-bar > * {
     pointer-events: auto;
+}
+
+/* Menu Button */
+.menu-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    transform: scale(var(--gui-scale-factor, 1));
+    transform-origin: top left;
+    z-index: 1001;
+}
+
+/* Score container */
+.score {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) scale(var(--gui-scale-factor, 1));
+    transform-origin: top center;
+    display: flex;
+    gap: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 5px 15px;
+    border-radius: 20px;
+    pointer-events: auto;
+    z-index: 1001;
+    font-size: calc(16px * var(--gui-scale-factor, 1));
+    line-height: 1.2;
+}
+
+.quiz-score,
+.secrets-score {
+    white-space: nowrap;
+    font-size: 1em;
+}
+
+/* Timer */
+.timer {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    transform: scale(var(--gui-scale-factor, 1));
+    transform-origin: top right;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-family: 'Minecraft', monospace;
+    font-size: 16px;
+    color: white;
+    text-shadow: 2px 2px 0 #000;
+    pointer-events: auto;
+    z-index: 1001;
 }
 
 /* Quality-based effects */
@@ -292,6 +346,8 @@ body {
 
 .menu-dropdown.active {
     display: block;
+    opacity: 1;
+    visibility: visible;
     animation: fadeIn 0.3s ease-in-out;
 }
 
@@ -310,9 +366,16 @@ body {
 
 .settings-section {
     margin-bottom: 20px;
-    padding: 10px;
-    background-color: rgba(0, 0, 0, 0.1);
-    border-radius: 5px;
+    padding: 15px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.settings-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
 }
 
 .settings-section h4 {
@@ -342,6 +405,8 @@ body {
     border: 1px solid var(--accent-color);
     color: var(--text-color);
     padding: 5px 8px;
+    border-radius: 4px;
+    min-width: 150px;
     border-radius: 4px;
     min-width: 120px;
 }
@@ -435,12 +500,13 @@ body {
     color: #ffffff; /* White text in dark mode */
 }
 
-/* Switch Toggle */
+/* Switch Toggle - More compact version */
 .switch {
     position: relative;
     display: inline-block;
-    width: 50px;
-    height: 26px;
+    width: 36px; /* More compact width */
+    height: 20px; /* Slightly reduced height */
+    margin: 0 8px;
 }
 
 .switch input {
@@ -458,23 +524,22 @@ body {
     right: 0;
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.3);
-    transition: .4s;
-    border-radius: 34px;
-    border: 2px solid var(--accent-color);
-    box-shadow: 0 0 5px var(--accent-color);
+    transition: .3s;
+    border-radius: 20px;
+    border: 1px solid var(--accent-color);
 }
 
 .slider:before {
     position: absolute;
     content: "";
-    height: 18px;
-    width: 18px;
-    left: 3px;
-    bottom: 2px;
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    top: 1px;
     background-color: var(--accent-color);
-    transition: .4s;
+    transition: .3s;
     border-radius: 50%;
-    box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 
 input:checked + .slider {
@@ -482,7 +547,7 @@ input:checked + .slider {
 }
 
 input:checked + .slider:before {
-    transform: translateX(22px);
+    transform: translateX(16px); /* Full travel distance */
     background-color: var(--accent-color);
 }
 
@@ -564,9 +629,7 @@ button {
     text-shadow: 0 0 10px var(--accent-color);
 }
 
-.quality-high .plus,
 .quality-high .hotbar-slot,
-.quality-ultra .plus,
 .quality-ultra .hotbar-slot {
     box-shadow: 0 0 15px var(--accent-color), 0 0 30px var(--accent-color);
     text-shadow: 0 0 15px var(--accent-color), 0 0 30px var(--accent-color);
@@ -707,16 +770,18 @@ button {
 
 .plus {
     font-size: 80px;
-    color: #888;
+    color: #000000; /* Changed to black */
     text-align: center;
     line-height: 1;
     user-select: none;
+    text-shadow: none; /* Remove any text shadow/glow */
+    opacity: 0.7; /* Slightly transparent */
 }
 
 /* Stamina Bar - Minecraft Boss Bar Style */
 .stamina-container {
-    position: fixed;  /* Changed from absolute to fixed */
-    bottom: 120px;
+    position: fixed;
+    bottom: calc(60px * var(--gui-scale-factor, 1) + 60px); /* 60px above the hotbar */
     left: 50%;
     transform: translateX(-50%) scale(var(--gui-scale-factor, 1));
     transform-origin: bottom center;
@@ -729,6 +794,7 @@ button {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     padding: 2px;
     z-index: 99;  /* Ensure it's above other elements but below the hotbar */
+    transition: transform 0.2s ease, bottom 0.2s ease;
 }
 
 .stamina-fill {

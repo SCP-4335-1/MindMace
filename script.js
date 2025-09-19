@@ -246,76 +246,115 @@ function setupEventListeners() {
     setupSettingsControls();
 }
 
+// Track pending settings changes
+let pendingSettings = {};
+let originalSettings = {};
+
 // Set up settings controls event listeners
 function setupSettingsControls() {
-    // Theme Toggle - Immediate feedback
+    // Save original settings when menu is opened
+    menuBtn.addEventListener('click', () => {
+        originalSettings = {...currentSettings};
+        pendingSettings = {};
+    });
+
+    // Apply button
+    const applyButton = document.getElementById('applySettings');
+    if (applyButton) {
+        applyButton.addEventListener('click', () => {
+            // Apply all pending settings
+            Object.assign(currentSettings, pendingSettings);
+            if (saveSettings()) {
+                applyAllSettings();
+                showNotification('Settings applied successfully!');
+                pendingSettings = {};
+            }
+        });
+    }
+    
+    // Reset to Defaults button
+    const resetButton = document.getElementById('resetSettings');
+    if (resetButton) {
+        resetButton.addEventListener('click', () => {
+            if (confirm('Are you sure you want to reset all settings to default?')) {
+                resetSettings();
+                showNotification('Settings reset to defaults');
+            }
+        });
+    }
+
+    // Theme Toggle
     const themeToggle = document.getElementById('themeToggle');
     themeToggle.addEventListener('change', function() {
-        currentSettings.theme = this.checked ? 'dark-theme' : 'light-theme';
-        applyAllSettings();
-        showNotification('Theme changed!');
+        pendingSettings.theme = this.checked ? 'dark-theme' : 'light-theme';
+        // Update UI but don't save yet
+        document.body.className = pendingSettings.theme;
     });
     
-    // Quality Select - Immediate feedback
+    // Quality Select
     const qualitySelect = document.getElementById('qualitySelect');
     qualitySelect.addEventListener('change', function() {
-        currentSettings.quality = this.value;
-        applyQualitySettings(this.value);
-        showNotification(`Quality set to: ${this.value}`);
+        pendingSettings.quality = this.value;
     });
     
-    // FPS Slider - Live update display, apply on mouse up
+    // FPS Slider
     const fpsSlider = document.getElementById('fpsSlider');
     const fpsValue = document.getElementById('fpsValue');
     
     fpsSlider.addEventListener('input', function() {
-        fpsValue.textContent = this.value;
-        // Don't apply yet, wait for mouseup or apply button
+        const value = parseInt(this.value, 10);
+        fpsValue.textContent = value;
+        pendingSettings.maxFPS = value;
     });
     
-    fpsSlider.addEventListener('change', function() {
-        currentSettings.maxFPS = parseInt(this.value, 10);
-        frameInterval = 1000 / currentSettings.maxFPS;
-        showNotification(`FPS limit set to: ${this.value}`);
-    });
-    
-    // GUI Scale Slider - Live update
+    // GUI Scale Slider
     const guiScale = document.getElementById('guiScale');
     const guiScaleValue = document.getElementById('guiScaleValue');
     
     guiScale.addEventListener('input', function() {
         const scale = parseInt(this.value, 10);
         guiScaleValue.textContent = scale;
+        pendingSettings.guiScale = scale;
         applyGUIScale(scale);
     });
     
-    // Control Scheme Radio Buttons - Immediate feedback
+    // Control Scheme Radio Buttons
+    // Control Scheme Radio Buttons
     document.querySelectorAll('input[name="controlScheme"]').forEach(radio => {
         radio.addEventListener('change', function() {
             if (this.checked) {
-                currentSettings.controlScheme = this.value;
-                setupControls();
-                showNotification(`Controls set to: ${this.value}`);
+                pendingSettings.controlScheme = this.value;
             }
         });
     });
     
-    // Mouse Sensitivity Slider - Live update
+    // Mouse Sensitivity Slider
     const sensitivitySlider = document.getElementById('mouseSensitivity');
     const sensitivityValue = document.getElementById('sensitivityValue');
     
     sensitivitySlider.addEventListener('input', function() {
-        const sensitivity = parseInt(this.value, 10);
-        sensitivityValue.textContent = sensitivity;
-        currentSettings.mouseSensitivity = sensitivity;
+        const value = parseFloat(this.value);
+        sensitivityValue.textContent = value.toFixed(1);
+        pendingSettings.mouseSensitivity = value;
     });
     
-    // Invert Y-Axis Toggle - Immediate feedback
+    // Invert Y-Axis Toggle
     const invertYAxis = document.getElementById('invertYAxis');
     invertYAxis.addEventListener('change', function() {
-        currentSettings.invertYAxis = this.checked;
-        showNotification(`Y-Axis ${this.checked ? 'Inverted' : 'Normal'}`);
+        pendingSettings.invertYAxis = this.checked;
     });
+    
+    // Cancel button - Revert to original settings
+    const cancelButton = document.getElementById('cancelSettings');
+    if (cancelButton) {
+        cancelButton.addEventListener('click', function() {
+            // Revert to original settings
+            Object.assign(pendingSettings, originalSettings);
+            updateSettingsUI();
+            toggleMenu();
+            showNotification('Settings reverted');
+        });
+    }
     
     // Apply Settings Button
     const applyBtn = document.getElementById('applySettings');
@@ -581,12 +620,21 @@ function handleTouchEnd(e) {
 
 // Reset settings to defaults
 function resetSettings() {
-    if (confirm('Are you sure you want to reset all settings to default?')) {
-        currentSettings = {...defaultSettings};
+    // Update both current and pending settings to defaults
+    currentSettings = {...defaultSettings};
+    pendingSettings = {};
+    
+    // Save to localStorage
+    if (saveSettings()) {
+        // Update UI to reflect default settings
         updateSettingsUI();
-        applySettings();
-        showNotification('Settings reset to defaults!');
+        // Apply the default settings
+        applyAllSettings();
+        // Show notification
+        showNotification('Settings reset to defaults');
+        return true;
     }
+    return false;
 }
 
 // Show a notification
@@ -676,8 +724,25 @@ function toggleMenu(e) {
     
     // Toggle event listener for closing on outside click
     if (isActive) {
+        // Save current settings when opening menu
+        originalSettings = {...currentSettings};
+        pendingSettings = {};
+        updateSettingsUI();
+        
         setTimeout(() => document.addEventListener('click', closeMenuOnClickOutside));
     } else {
+        // Revert to original settings if menu is closed without applying
+        if (Object.keys(pendingSettings).length > 0) {
+            if (confirm('You have unsaved changes. Discard changes?')) {
+                // User chose to discard changes
+                pendingSettings = {};
+            } else {
+                // User chose to keep editing, prevent menu from closing
+                menuDropdown.classList.add('active');
+                menuBtn.classList.add('active');
+                return;
+            }
+        }
         document.removeEventListener('click', closeMenuOnClickOutside);
     }
 }
