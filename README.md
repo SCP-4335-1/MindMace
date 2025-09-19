@@ -39,7 +39,7 @@ git commit -m "Beschreibe deine Änderung"
 git push origin main
 ```
 
-## SpielTesten
+## Spiel Testen "GUI TEST"
 ```bash
 git clone https://github.com/SCP-4335-1/MindMaze.git
 cd MindMaze
