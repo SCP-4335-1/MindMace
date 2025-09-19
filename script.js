@@ -1,5 +1,5 @@
 // DOM Elements
-const menuBtn = document.getElementById('menuBtn');
+const settingsMenuBtn = document.getElementById('menuBtn'); // Changed from 'settingsMenuBtn' to 'menuBtn'
 const menuDropdown = document.getElementById('menuDropdown');
 const themeToggle = document.getElementById('themeToggle');
 const body = document.body;
@@ -20,7 +20,7 @@ let maxSecrets = 5;
 let stamina = 100;
 let timerInterval;
 
-// Game Settings
+// Default settings (backup)
 const defaultSettings = {
     theme: 'light-theme',
     quality: 'medium',
@@ -31,8 +31,11 @@ const defaultSettings = {
     invertYAxis: false
 };
 
-// Current settings
-let currentSettings = {...defaultSettings};
+// Current settings (applied settings)
+let currentSettings = {};
+
+// Backup of default settings (for reset)
+let backupSettings = {...defaultSettings};
 
 // Game state
 let gameLoop = null;
@@ -46,6 +49,10 @@ function init() {
     
     // Initialize hotbar with 9 slots
     initHotbar();
+    
+    // Show the hotbar
+    const hotbar = document.querySelector('.hotbar');
+    hotbar.style.display = 'flex';
     
     // Start the game timer
     startTimer();
@@ -139,35 +146,30 @@ function updateGameUI() {
     // This is called from the render loop
 }
 
-// Load settings from localStorage
+// Load settings
 function loadSettings() {
-    const savedSettings = localStorage.getItem('gameSettings');
-    if (savedSettings) {
-        try {
-            currentSettings = {...defaultSettings, ...JSON.parse(savedSettings)};
-            // Apply theme
-            body.className = currentSettings.theme;
-            themeToggle.checked = currentSettings.theme === 'dark-theme';
-        } catch (e) {
-            console.error('Error loading settings:', e);
-            currentSettings = {...defaultSettings};
-        }
-    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        currentSettings.theme = 'dark-theme';
-        body.className = 'dark-theme';
-        themeToggle.checked = true;
+    try {
+        // Always use default settings since we're not persisting anymore
+        currentSettings = { ...defaultSettings };
+        backupSettings = { ...defaultSettings };
+        
+        // Apply the default settings
+        applyAllSettings();
+        updateSettingsUI();
+        return true;
+    } catch (e) {
+        console.error('Error loading settings:', e);
+        // Fallback to default settings on error
+        currentSettings = { ...defaultSettings };
+        backupSettings = { ...defaultSettings };
+        applyAllSettings();
+        return false;
     }
 }
 
-// Save settings to localStorage
+// Save settings (no-op since we're not persisting)
 function saveSettings() {
-    try {
-        localStorage.setItem('gameSettings', JSON.stringify(currentSettings));
-        return true;
-    } catch (e) {
-        console.error('Error saving settings:', e);
-        return false;
-    }
+    return true; // Always return true since we're not actually saving
 }
 
 // Update UI elements to reflect current settings
@@ -224,20 +226,17 @@ function applyGUIScale(scale) {
     // Update current settings
     currentSettings.guiScale = scale;
     
-    // Force a reflow to ensure smooth animation
-    scaleContainer.offsetHeight;
-    
     console.log('GUI scale updated:', scale, '(', scaleFactor, ')');
 }
 
 // Set up event listeners
 function setupEventListeners() {
     // Menu button click
-    menuBtn.addEventListener('click', toggleMenu);
+    settingsMenuBtn.addEventListener('click', toggleMenu);
     
     // Click outside menu to close it
     document.addEventListener('click', (e) => {
-        if (!menuBtn.contains(e.target) && !menuDropdown.contains(e.target)) {
+        if (!settingsMenuBtn.contains(e.target) && !menuDropdown.contains(e.target)) {
             menuDropdown.classList.remove('active');
         }
     });
@@ -253,8 +252,8 @@ let originalSettings = {};
 // Set up settings controls event listeners
 function setupSettingsControls() {
     // Save original settings when menu is opened
-    menuBtn.addEventListener('click', () => {
-        originalSettings = {...currentSettings};
+    settingsMenuBtn.addEventListener('click', () => {
+        originalSettings = { ...currentSettings };
         pendingSettings = {};
     });
 
@@ -264,32 +263,49 @@ function setupSettingsControls() {
         applyButton.addEventListener('click', () => {
             // Apply all pending settings
             Object.assign(currentSettings, pendingSettings);
-            if (saveSettings()) {
-                applyAllSettings();
-                showNotification('Settings applied successfully!');
-                pendingSettings = {};
-            }
+            applyAllSettings();
+            showNotification('Settings applied successfully!');
+            pendingSettings = {};
         });
     }
     
     // Reset to Defaults button
     const resetButton = document.getElementById('resetSettings');
     if (resetButton) {
-        resetButton.addEventListener('click', () => {
+        resetButton.addEventListener('click', function(e) {
+            e.stopPropagation();
             if (confirm('Are you sure you want to reset all settings to default?')) {
                 resetSettings();
-                showNotification('Settings reset to defaults');
             }
         });
     }
 
     // Theme Toggle
     const themeToggle = document.getElementById('themeToggle');
-    themeToggle.addEventListener('change', function() {
-        pendingSettings.theme = this.checked ? 'dark-theme' : 'light-theme';
-        // Update UI but don't save yet
-        document.body.className = pendingSettings.theme;
-    });
+    const themeLabel = themeToggle?.parentElement?.previousElementSibling; // Get the label element
+    
+    // Function to update theme label and apply theme
+    function updateTheme(isDark) {
+        if (themeLabel) {
+            themeLabel.textContent = isDark ? 'Dark Mode' : 'Light Mode';
+        }
+        currentSettings.theme = isDark ? 'dark-theme' : 'light-theme';
+        document.body.className = currentSettings.theme;
+        saveSettings();
+    }
+    
+    // Initialize theme
+    if (themeToggle) {
+        // Set initial state
+        const isDark = currentSettings.theme === 'dark-theme';
+        themeToggle.checked = isDark;
+        updateTheme(isDark);
+        
+        // Add event listener
+        themeToggle.addEventListener('change', function() {
+            updateTheme(this.checked);
+        });
+    }
     
     // Quality Select
     const qualitySelect = document.getElementById('qualitySelect');
@@ -300,23 +316,165 @@ function setupSettingsControls() {
     // FPS Slider
     const fpsSlider = document.getElementById('fpsSlider');
     const fpsValue = document.getElementById('fpsValue');
+    let fpsDebounceTimer;
+    let isFpsDragging = false;
     
-    fpsSlider.addEventListener('input', function() {
-        const value = parseInt(this.value, 10);
-        fpsValue.textContent = value;
-        pendingSettings.maxFPS = value;
-    });
+    // Function to handle FPS slider changes
+    function handleFpsChange(value) {
+        const intValue = parseInt(value, 10);
+        fpsValue.textContent = intValue;
+        currentSettings.maxFPS = intValue;
+        
+        // Clear any pending save
+        if (fpsDebounceTimer) {
+            clearTimeout(fpsDebounceTimer);
+        }
+        
+        // Debounce the save to prevent excessive writes
+        fpsDebounceTimer = setTimeout(() => {
+            saveSettings();
+            fpsDebounceTimer = null;
+        }, 100);
+    }
+    
+    // Function to update slider value based on mouse X position
+    function updateFpsSliderFromMouse(e) {
+        if (!isFpsDragging) return;
+        
+        const rect = fpsSlider.getBoundingClientRect();
+        let value = (e.clientX - rect.left) / rect.width;
+        value = Math.min(Math.max(0, value), 1); // Clamp between 0 and 1
+        
+        // Convert to slider value range (30-144)
+        const min = parseInt(fpsSlider.min || 30, 10);
+        const max = parseInt(fpsSlider.max || 144, 10);
+        const newValue = Math.round(min + (value * (max - min)));
+        
+        // Update slider and handle change
+        fpsSlider.value = newValue;
+        handleFpsChange(newValue);
+    }
+    
+    // Initialize slider values from current settings
+    if (fpsSlider && fpsValue) {
+        fpsSlider.value = currentSettings.maxFPS || 60;
+        fpsValue.textContent = currentSettings.maxFPS || 60;
+        
+        // Mouse down on slider track
+        fpsSlider.addEventListener('mousedown', function(e) {
+            isFpsDragging = true;
+            updateFpsSliderFromMouse(e);
+            e.preventDefault(); // Prevent text selection
+        });
+        
+        // Mouse move on document (for dragging)
+        document.addEventListener('mousemove', updateFpsSliderFromMouse);
+        
+        // Mouse up to stop dragging
+        document.addEventListener('mouseup', function() {
+            isFpsDragging = false;
+            // Force save on release
+            if (fpsDebounceTimer) {
+                clearTimeout(fpsDebounceTimer);
+                saveSettings();
+            }
+        });
+        
+        // Still keep input/change for accessibility and touch devices
+        fpsSlider.addEventListener('input', function() {
+            if (!isFpsDragging) handleFpsChange(this.value);
+        });
+        
+        fpsSlider.addEventListener('change', function() {
+            handleFpsChange(this.value);
+            if (fpsDebounceTimer) {
+                clearTimeout(fpsDebounceTimer);
+                saveSettings();
+            }
+        });
+    }
     
     // GUI Scale Slider
     const guiScale = document.getElementById('guiScale');
     const guiScaleValue = document.getElementById('guiScaleValue');
+    let guiScaleDebounceTimer;
+    let isGuiScaleDragging = false;
     
-    guiScale.addEventListener('input', function() {
-        const scale = parseInt(this.value, 10);
+    // Function to handle GUI scale changes
+    function handleGuiScaleChange(value) {
+        const scale = parseInt(value, 10);
         guiScaleValue.textContent = scale;
-        pendingSettings.guiScale = scale;
+        currentSettings.guiScale = scale;
         applyGUIScale(scale);
-    });
+        
+        // Clear any pending save
+        if (guiScaleDebounceTimer) {
+            clearTimeout(guiScaleDebounceTimer);
+        }
+        
+        // Debounce the save to prevent excessive writes
+        guiScaleDebounceTimer = setTimeout(() => {
+            saveSettings();
+            guiScaleDebounceTimer = null;
+        }, 100);
+    }
+    
+    // Function to update slider value based on mouse X position
+    function updateGuiScaleFromMouse(e) {
+        if (!isGuiScaleDragging) return;
+        
+        const rect = guiScale.getBoundingClientRect();
+        let value = (e.clientX - rect.left) / rect.width;
+        value = Math.min(Math.max(0, value), 1); // Clamp between 0 and 1
+        
+        // Convert to slider value range (50-200)
+        const min = parseInt(guiScale.min || 50, 10);
+        const max = parseInt(guiScale.max || 200, 10);
+        const newValue = Math.round(min + (value * (max - min)));
+        
+        // Update slider and handle change
+        guiScale.value = newValue;
+        handleGuiScaleChange(newValue);
+    }
+    
+    // Initialize slider values from current settings
+    if (guiScale && guiScaleValue) {
+        guiScale.value = currentSettings.guiScale || 100;
+        guiScaleValue.textContent = currentSettings.guiScale || 100;
+        
+        // Mouse down on slider track
+        guiScale.addEventListener('mousedown', function(e) {
+            isGuiScaleDragging = true;
+            updateGuiScaleFromMouse(e);
+            e.preventDefault(); // Prevent text selection
+        });
+        
+        // Mouse move on document (for dragging)
+        document.addEventListener('mousemove', updateGuiScaleFromMouse);
+        
+        // Mouse up to stop dragging
+        document.addEventListener('mouseup', function() {
+            isGuiScaleDragging = false;
+            // Force save on release
+            if (guiScaleDebounceTimer) {
+                clearTimeout(guiScaleDebounceTimer);
+                saveSettings();
+            }
+        });
+        
+        // Still keep input/change for accessibility and touch devices
+        guiScale.addEventListener('input', function() {
+            if (!isGuiScaleDragging) handleGuiScaleChange(this.value);
+        });
+        
+        guiScale.addEventListener('change', function() {
+            handleGuiScaleChange(this.value);
+            if (guiScaleDebounceTimer) {
+                clearTimeout(guiScaleDebounceTimer);
+                saveSettings();
+            }
+        });
+    }
     
     // Control Scheme Radio Buttons
     // Control Scheme Radio Buttons
@@ -331,18 +489,109 @@ function setupSettingsControls() {
     // Mouse Sensitivity Slider
     const sensitivitySlider = document.getElementById('mouseSensitivity');
     const sensitivityValue = document.getElementById('sensitivityValue');
+    let sensitivityDebounceTimer;
+    let isSensitivityDragging = false;
     
-    sensitivitySlider.addEventListener('input', function() {
-        const value = parseFloat(this.value);
-        sensitivityValue.textContent = value.toFixed(1);
-        pendingSettings.mouseSensitivity = value;
-    });
+    // Function to handle sensitivity changes
+    function handleSensitivityChange(value) {
+        const floatValue = parseFloat(value);
+        sensitivityValue.textContent = floatValue.toFixed(1);
+        currentSettings.mouseSensitivity = floatValue;
+        
+        // Clear any pending save
+        if (sensitivityDebounceTimer) {
+            clearTimeout(sensitivityDebounceTimer);
+        }
+        
+        // Debounce the save to prevent excessive writes
+        sensitivityDebounceTimer = setTimeout(() => {
+            saveSettings();
+            sensitivityDebounceTimer = null;
+        }, 100);
+    }
+    
+    // Function to update slider value based on mouse X position
+    function updateSensitivityFromMouse(e) {
+        if (!isSensitivityDragging) return;
+        
+        const rect = sensitivitySlider.getBoundingClientRect();
+        let value = (e.clientX - rect.left) / rect.width;
+        value = Math.min(Math.max(0, value), 1); // Clamp between 0 and 1
+        
+        // Convert to slider value range (1-200)
+        const min = parseFloat(sensitivitySlider.min || 1);
+        const max = parseFloat(sensitivitySlider.max || 200);
+        const newValue = Math.round((min + (value * (max - min))) * 10) / 10; // Round to 1 decimal
+        
+        // Update slider and handle change
+        sensitivitySlider.value = newValue;
+        handleSensitivityChange(newValue);
+    }
+    
+    // Initialize slider values from current settings
+    if (sensitivitySlider && sensitivityValue) {
+        sensitivitySlider.value = currentSettings.mouseSensitivity || 50;
+        sensitivityValue.textContent = (currentSettings.mouseSensitivity || 50).toFixed(1);
+        
+        // Mouse down on slider track
+        sensitivitySlider.addEventListener('mousedown', function(e) {
+            isSensitivityDragging = true;
+            updateSensitivityFromMouse(e);
+            e.preventDefault(); // Prevent text selection
+        });
+        
+        // Mouse move on document (for dragging)
+        document.addEventListener('mousemove', updateSensitivityFromMouse);
+        
+        // Mouse up to stop dragging
+        document.addEventListener('mouseup', function() {
+            isSensitivityDragging = false;
+            // Force save on release
+            if (sensitivityDebounceTimer) {
+                clearTimeout(sensitivityDebounceTimer);
+                saveSettings();
+            }
+        });
+        
+        // Still keep input/change for accessibility and touch devices
+        sensitivitySlider.addEventListener('input', function() {
+            if (!isSensitivityDragging) handleSensitivityChange(this.value);
+        });
+        
+        sensitivitySlider.addEventListener('change', function() {
+            handleSensitivityChange(this.value);
+            if (sensitivityDebounceTimer) {
+                clearTimeout(sensitivityDebounceTimer);
+                saveSettings();
+            }
+        });
+    }
     
     // Invert Y-Axis Toggle
     const invertYAxis = document.getElementById('invertYAxis');
-    invertYAxis.addEventListener('change', function() {
-        pendingSettings.invertYAxis = this.checked;
-    });
+    const invertYLabel = invertYAxis?.parentElement?.previousElementSibling;
+    
+    // Function to update Y-axis invert setting
+    function updateInvertYAxis(inverted) {
+        if (invertYLabel) {
+            invertYLabel.textContent = `Invert Y-Axis: ${inverted ? 'On' : 'Off'}`;
+        }
+        currentSettings.invertYAxis = inverted;
+        saveSettings();
+    }
+    
+    // Initialize Y-axis invert
+    if (invertYAxis) {
+        // Set initial state
+        const isInverted = !!currentSettings.invertYAxis;
+        invertYAxis.checked = isInverted;
+        updateInvertYAxis(isInverted);
+        
+        // Add event listener
+        invertYAxis.addEventListener('change', function() {
+            updateInvertYAxis(this.checked);
+        });
+    }
     
     // Cancel button - Revert to original settings
     const cancelButton = document.getElementById('cancelSettings');
@@ -369,28 +618,14 @@ function setupSettingsControls() {
             applyBtn.style.background = '';
         }, 1000);
     });
-    
-    // Reset to Default Button
-    document.getElementById('resetSettings').addEventListener('click', function() {
-        if (confirm('Are you sure you want to reset all settings to default?')) {
-            resetSettings();
-            showNotification('Settings reset to default');
-        }
-    });
 }
 
-// Apply settings from the UI
-function applySettings() {
-    // Update current settings from UI
-    currentSettings = {
-        theme: document.getElementById('themeToggle').checked ? 'dark-theme' : 'light-theme',
-        quality: document.getElementById('qualitySelect').value,
-        maxFPS: parseInt(document.getElementById('fpsSlider').value, 10),
-        guiScale: parseInt(document.getElementById('guiScale').value, 10),
-        controlScheme: document.querySelector('input[name="controlScheme"]:checked').value,
-        mouseSensitivity: parseInt(document.getElementById('mouseSensitivity').value, 10),
-        invertYAxis: document.getElementById('invertYAxis').checked
-    };
+// Apply settings from the UI (immediately applies changes)
+function applySettings(settings) {
+    // Update current settings with provided settings
+    if (settings) {
+        currentSettings = { ...settings };
+    }
     
     // Apply all settings
     applyAllSettings();
@@ -398,14 +633,13 @@ function applySettings() {
     // Save settings
     saveSettings();
     
-    // Show feedback
-    showNotification('Settings saved!');
-    
-    // Close the menu
-    menuDropdown.classList.remove('active');
+    // Show feedback if not called from reset
+    if (!settings) {
+        showNotification('Settings updated!');
+    }
 }
 
-// Apply all current settings to the game
+// Apply current settings to the game
 function applyAllSettings() {
     // Apply theme
     body.className = currentSettings.theme;
@@ -420,9 +654,9 @@ function applyAllSettings() {
     applyQualitySettings(currentSettings.quality);
     
     // Apply control scheme
-    setupControls();
+    setupControls(currentSettings.controlScheme);
     
-    // Save settings after applying
+    // Save settings
     saveSettings();
 }
 
@@ -620,21 +854,20 @@ function handleTouchEnd(e) {
 
 // Reset settings to defaults
 function resetSettings() {
-    // Update both current and pending settings to defaults
-    currentSettings = {...defaultSettings};
-    pendingSettings = {};
-    
-    // Save to localStorage
-    if (saveSettings()) {
-        // Update UI to reflect default settings
-        updateSettingsUI();
-        // Apply the default settings
+    try {
+        // Reset to default settings
+        currentSettings = { ...defaultSettings };
         applyAllSettings();
-        // Show notification
+        updateSettingsUI();
         showNotification('Settings reset to defaults');
+        menuDropdown.classList.remove('active');
+        settingsMenuBtn.classList.remove('active');
         return true;
+    } catch (e) {
+        console.error('Error resetting to default settings:', e);
+        showNotification('Error resetting settings');
+        return false;
     }
-    return false;
 }
 
 // Show a notification
@@ -720,38 +953,24 @@ document.head.appendChild(style);
 function toggleMenu(e) {
     if (e) e.stopPropagation();
     const isActive = menuDropdown.classList.toggle('active');
-    menuBtn.classList.toggle('active', isActive);
+    settingsMenuBtn.classList.toggle('active', isActive);
     
     // Toggle event listener for closing on outside click
     if (isActive) {
-        // Save current settings when opening menu
-        originalSettings = {...currentSettings};
-        pendingSettings = {};
+        // Update UI to reflect current settings
         updateSettingsUI();
         
         setTimeout(() => document.addEventListener('click', closeMenuOnClickOutside));
     } else {
-        // Revert to original settings if menu is closed without applying
-        if (Object.keys(pendingSettings).length > 0) {
-            if (confirm('You have unsaved changes. Discard changes?')) {
-                // User chose to discard changes
-                pendingSettings = {};
-            } else {
-                // User chose to keep editing, prevent menu from closing
-                menuDropdown.classList.add('active');
-                menuBtn.classList.add('active');
-                return;
-            }
-        }
         document.removeEventListener('click', closeMenuOnClickOutside);
     }
 }
 
 // Close menu when clicking outside
 function closeMenuOnClickOutside(e) {
-    if (!menuDropdown.contains(e.target) && !menuBtn.contains(e.target)) {
+    if (!menuDropdown.contains(e.target) && !settingsMenuBtn.contains(e.target)) {
         menuDropdown.classList.remove('active');
-        menuBtn.classList.remove('active');
+        settingsMenuBtn.classList.remove('active');
         document.removeEventListener('click', closeMenuOnClickOutside);
     }
 }

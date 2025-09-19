@@ -39,8 +39,37 @@
     </div>
 
     <!-- Hotbar (moved outside scale container) -->
-    <div class="hotbar">
+    <div class="hotbar" style="display: none;">
         <!-- Hotbar slots will be added by JavaScript -->
+    </div>
+
+    <!-- Start Menu Overlay -->
+    <div class="start-menu-overlay" id="startMenu">
+        <div class="start-menu-content">
+            <img src="MindMaze-Logo.png" alt="Game Logo" class="game-logo">
+            <h1 class="game-title">MindMaze</h1>
+            <button class="start-button" id="startButton">Start</button>
+        </div>
+    </div>
+
+    <!-- Door Selection Screen (initially hidden) -->
+    <div class="door-selection hidden" id="doorSelection">
+        <h2>Choose Your Path</h2>
+        <div class="doors-container">
+            <div class="door normal-door" id="normalDoor">
+                <div class="door-content">
+                    <div class="door-light"></div>
+                    <div class="door-text">Normal Mode</div>
+                </div>
+            </div>
+            <div class="door horror-door" id="horrorDoor">
+                <div class="door-content">
+                    <div class="door-lock" id="horrorLock">🔒</div>
+                    <div class="door-light horror-glow"></div>
+                    <div class="door-text hidden" id="horrorText">Horror Mode</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Scale Container (for game elements) -->
@@ -52,27 +81,13 @@
     <div class="menu-dropdown" id="menuDropdown">
         <h3 class="settings-title">Settings</h3>
         
-        <!-- Settings Presets -->
-        <div class="settings-section">
-            <h4>Presets</h4>
-            <div class="setting-option">
-                <select id="settingsPreset" class="settings-select">
-                    <option value="default">Default</option>
-                    <!-- Presets will be added here by JavaScript -->
-                </select>
-                <button id="savePresetBtn" class="btn">Save as New</button>
-                <button id="updatePresetBtn" class="btn" disabled>Update</button>
-                <button id="deletePresetBtn" class="btn btn-danger" disabled>Delete</button>
-            </div>
-        </div>
-        
         <div class="settings-section">
             <h4>Display</h4>
             <div class="setting-option">
                 <label>Theme</label>
                 <div class="theme-toggle">
                     <span>Dark Mode</span>
-                    <label class="switch">
+                    <label class="themeswitch">
                         <input type="checkbox" id="themeToggle">
                         <span class="slider round"></span>
                     </label>
@@ -127,7 +142,7 @@
             
             <div class="setting-option">
                 <label for="invertYAxis">Invert Y-Axis</label>
-                <label class="switch">
+                <label class="yaxisswitch">
                     <input type="checkbox" id="invertYAxis">
                     <span class="slider round"></span>
                 </label>
@@ -135,11 +150,11 @@
         </div>
         
         <div class="settings-buttons">
-            <button id="applySettings" class="settings-button">Apply</button>
-            <button id="resetSettings" class="settings-button">Reset to Default</button>
+            <!-- Settings controls will be added here -->
         </div>
     </div>
 
+    <script src="menu.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

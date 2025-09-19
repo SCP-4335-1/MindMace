@@ -156,6 +156,7 @@ body {
     --text-color: #333;
     --accent-color: #0066ff;
     --accent-glow: 0 0 10px rgba(0, 102, 255, 0.7);
+    --text-color: #ffffff;
     
     /* Menu & Settings */
     --menu-bg: rgba(255, 255, 255, 0.95);
@@ -171,6 +172,9 @@ body {
     --settings-input-border: 1px solid rgba(0, 0, 0, 0.2);
     
     /* Game Elements */
+    --secondary-color: #ffffff;
+    --stamina-color: #0066ff;
+    --neon-glow: 0 0 10px #0066ff, 0 0 20px #0066ff, 0 0 30px #0066ff;
     --hotbar-bg: rgba(255, 255, 255, 0.8);
     --hotbar-border: #fff;
     
@@ -395,7 +399,7 @@ body {
 
 .setting-option label {
     margin-right: 10px;
-    color: var(--text-color);
+    color: var(--settings-text-color);
     flex: 1;
     min-width: 120px;
 }
@@ -493,29 +497,64 @@ body {
 }
 
 .light-theme .theme-toggle {
-    color: #000000; /* Black text in light mode */
+    color: #000000;
 }
 
 .dark-theme .theme-toggle {
-    color: #ffffff; /* White text in dark mode */
+    color: #ffffff;
 }
 
-/* Switch Toggle - More compact version */
-.switch {
+/* ===== New Switch Component ===== */
+.themeswitch {
+    --switch-width: 118px;
+    --switch-height: 24px;
+    --switch-padding: 2px;
+    --switch-bg-off: rgba(0, 0, 0, 0.2);
+    --switch-bg-on: var(--accent-color);
+    --switch-ball-size: calc(var(--switch-height) - (var(--switch-padding) * 2));
+    --switch-transition: all 0.3s ease;
+    
     position: relative;
     display: inline-block;
-    width: 36px; /* More compact width */
-    height: 20px; /* Slightly reduced height */
+    width: var(--switch-width);
+    height: var(--switch-height);
     margin: 0 8px;
+    vertical-align: middle;
 }
 
-.switch input {
+.yaxisswitch {
+    --switch-width: 233px;
+    --switch-height: 24px;
+    --switch-padding: 2px;
+    --switch-bg-off: rgba(0, 0, 0, 0.2);
+    --switch-bg-on: var(--accent-color);
+    --switch-ball-size: calc(var(--switch-height) - (var(--switch-padding) * 2));
+    --switch-transition: all 0.3s ease;
+    
+    position: relative;
+    display: inline-block;
+    width: var(--switch-width);
+    height: var(--switch-height);
+    margin: 0 8px;
+    vertical-align: middle;
+}
+
+/* Hide the default checkbox */
+.yaxisswitch input {
     opacity: 0;
     width: 0;
     height: 0;
-    cursor: pointer;
+    position: absolute;
 }
 
+.themeswitch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+/* The switch track */
 .slider {
     position: absolute;
     cursor: pointer;
@@ -523,41 +562,64 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.3);
-    transition: .3s;
-    border-radius: 20px;
+    background-color: var(--switch-bg-off);
+    transition: var(--switch-transition);
+    border-radius: var(--switch-height);
     border: 1px solid var(--accent-color);
 }
 
+/* The switch ball */
 .slider:before {
     position: absolute;
     content: "";
-    height: 16px;
-    width: 16px;
-    left: 2px;
-    top: 1px;
+    height: var(--switch-ball-size);
+    width: var(--switch-ball-size);
+    left: var(--switch-padding);
+    top: 50%;
+    transform: translateY(-50%);
     background-color: var(--accent-color);
-    transition: .3s;
+    transition: var(--switch-transition);
     border-radius: 50%;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
+/* When the switch is checked */
 input:checked + .slider {
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: var(--switch-bg-on);
+    opacity: 0.7;
 }
 
 input:checked + .slider:before {
-    transform: translateX(16px); /* Full travel distance */
-    background-color: var(--accent-color);
+    transform: translateX(calc(var(--switch-width) - var(--switch-ball-size) - (var(--switch-padding) * 2))) translateY(-50%);
+    background-color: white;
 }
 
+/* Focus state for accessibility */
 input:focus-visible + .slider {
-    outline: 2px solid var(--accent-color);
-    outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--accent-color);
 }
 
+/* Disabled state */
+input:disabled + .slider {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Rounded corners for the slider (optional) */
 .slider.round {
-    border-radius: 34px;
+    border-radius: var(--switch-height);
+}
+
+/* Compact version */
+.switch.small {
+    --switch-width: 36px;
+    --switch-height: 20px;
+}
+
+/* Large version */
+.switch.large {
+    --switch-width: 52px;
+    --switch-height: 28px;
 }
 
 /* Form Elements */
@@ -972,7 +1034,280 @@ button {
     box-shadow: 0 0 10px var(--accent-color), 0 0 20px var(--accent-color);
 }
 
+/* Start Menu Styles */
+.start-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('MindMaze-Background.jpg') no-repeat center center fixed;
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    transition: opacity 0.5s ease;
+}
+
+.start-menu-overlay::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1;
+}
+
+.start-menu-content {
+    text-align: center;
+    color: white;
+    padding: 2rem;
+    max-width: 90%;
+    position: relative;
+    z-index: 2;
+}
+
+.game-logo {
+    max-width: 200px;
+    height: auto;
+    margin-bottom: 1.5rem;
+    animation: float 3s ease-in-out infinite;
+}
+
+.game-title {
+    font-family: 'Arial Black', sans-serif;
+    font-size: 3.5rem;
+    margin-bottom: 2rem;
+    color: #fff;
+    text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000, 0 0 30px #ff0000;
+    letter-spacing: 2px;
+}
+
+.start-button {
+    background: linear-gradient(45deg, #ff0000, #ff6b6b);
+    border: none;
+    color: white;
+    padding: 1rem 3rem;
+    font-size: 1.5rem;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Arial', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+}
+
+.start-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px rgba(255, 0, 0, 0.8);
+}
+
+.start-button:active {
+    transform: scale(0.98);
+}
+
+/* Door Selection Styles */
+.door-selection {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('MindMaze-Background.jpg') no-repeat center center fixed;
+    background-size: cover;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    color: white;
+    font-family: 'Arial', sans-serif;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+}
+
+.door-selection::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 1;
+}
+
+.door-selection.visible {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.door-selection h2 {
+    font-size: 3rem;
+    margin-bottom: 3rem;
+    text-shadow: 0 0 10px #ff0000;
+    letter-spacing: 3px;
+    position: relative;
+    z-index: 2;
+}
+
+.doors-container {
+    display: flex;
+    justify-content: center;
+    gap: 4rem;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+}
+
+.door {
+    position: relative;
+    width: 300px;
+    height: 500px;
+    background: #333;
+    border: 5px solid #555;
+    border-radius: 10px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.door:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+}
+
+.door-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.door-light {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    clip-path: polygon(50% 0%, 100% 0, 100% 100%, 0 100%, 0 0);
+    z-index: 1;
+}
+
+.door-text {
+    position: relative;
+    z-index: 2;
+    font-size: 1.8rem;
+    font-weight: bold;
+    text-align: center;
+    color: white;
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
+    margin-top: 1rem;
+    transition: all 0.3s ease;
+}
+
+/* Normal Door */
+.normal-door {
+    background: linear-gradient(135deg, #4a4a4a, #2a2a2a);
+}
+
+.normal-door .door-light {
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.2));
+    animation: lightPulse 2s infinite alternate;
+}
+
+/* Horror Door */
+.horror-door {
+    background: linear-gradient(135deg, #2a0a0a, #1a0000);
+    position: relative;
+}
+
+.horror-door .door-light {
+    background: linear-gradient(90deg, rgba(255, 0, 0, 0.2), rgba(255, 0, 0, 0.6), rgba(255, 0, 0, 0.2));
+    animation: horrorPulse 2s infinite alternate;
+    opacity: 0.5;
+}
+
+.horror-glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, rgba(255, 0, 0, 0.5) 0%, transparent 70%);
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.horror-door.unlocked .horror-glow {
+    opacity: 1;
+}
+
+.door-lock {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 3rem;
+    z-index: 2;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+    transition: all 0.3s ease;
+}
+
+.horror-door.unlocked .door-lock {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+    pointer-events: none;
+}
+
+.horror-door .door-text {
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.horror-door.unlocked .door-text {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Animations */
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+    100% { transform: translateY(0px); }
+}
+
+@keyframes lightPulse {
+    0% { opacity: 0.3; }
+    100% { opacity: 0.8; }
+}
+
+@keyframes horrorPulse {
+    0% { opacity: 0.3; }
+    100% { opacity: 0.7; }
+}
+
 /* Utility Classes */
 .hidden {
-    display: none;
+    display: none !important;
+}
+
+.visible {
+    opacity: 1 !important;
+    pointer-events: all !important;
 }
