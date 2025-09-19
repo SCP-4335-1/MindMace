@@ -67,6 +67,17 @@ function init() {
     startGameLoop();
 }
 
+// hotbar
+function initHotbar() {
+    const hotbar = document.querySelector('.hotbar');
+    for (let i = 0; i < 9; i++) {
+        const slot = document.createElement('div');
+        slot.classList.add('hotbar-slot');
+        slot.setAttribute('data-slot', i);
+        hotbar.appendChild(slot);
+    }
+}
+
 // Game loop
 function startGameLoop() {
     // Clear any existing game loop
