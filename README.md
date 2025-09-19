@@ -37,11 +37,11 @@ Um Änderungen am Projekt zu speichern und auf GitHub hochzuladen, folge diesen 
 git add .
 git commit -m "Beschreibe deine Änderung"
 git push origin main
-
+```
 
 ## SpielTesten
-´´´bash
+```bash
 git clone https://github.com/SCP-4335-1/MindMaze.git
 cd MindMaze
 npm start
-´´´
+```
