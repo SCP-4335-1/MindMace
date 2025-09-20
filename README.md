@@ -49,5 +49,8 @@ npm start
 
 ### NODE SERVER
 ```bash
+git clone https://github.com/SCP-4335-1/MindMaze.git
+cd MindMaze
+npm start
 node server.js
 ```
