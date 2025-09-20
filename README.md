@@ -40,8 +40,14 @@ git push origin main
 ```
 
 ## Spiel Testen "GUI TEST"
+### NPM SERVER
 ```bash
 git clone https://github.com/SCP-4335-1/MindMaze.git
 cd MindMaze
 npm start
+```
+
+### NODE SERVER
+```bash
+node server.js
 ```
